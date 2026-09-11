@@ -1,5 +1,6 @@
 import 'package:aaraa_kart/app/router/app_routes.dart';
 import 'package:aaraa_kart/core/config/brand_config.dart';
+import 'package:aaraa_kart/cubit/storage/storage_cubit.dart';
 import 'package:aaraa_kart/data/model/create_subscription_request.dart';
 import 'package:aaraa_kart/data/model/create_subscription_response.dart';
 import 'package:aaraa_kart/data/model/customer_address.dart';
@@ -33,6 +34,7 @@ import 'package:aaraa_kart/presentation/wallet/wallet_screen.dart';
 import 'package:aaraa_kart/presentation/widgets/bottom_nav_bar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRoute {
@@ -40,6 +42,22 @@ class AppRoute {
 
   AppRoute.setStream(BuildContext ctx) {
     context = ctx;
+  }
+
+  static bool _isAuthenticated(BuildContext context) {
+    final storage = context.read<StorageCubit>();
+    return storage.isGuestMode == false &&
+        (storage.userData?.customerID?.trim().isNotEmpty ?? false);
+  }
+
+  static Widget _authenticatedOnly(
+    BuildContext context,
+    Widget child,
+  ) {
+    if (_isAuthenticated(context)) {
+      return child;
+    }
+    return const LoginScreen(isGuestMode: true);
   }
 
   static GoRouter appRouter = GoRouter(
@@ -102,44 +120,52 @@ class AppRoute {
         path: AppRoutes.payment.path,
         name: AppRoutes.payment.name,
         builder: (context, state) {
+          if (!_isAuthenticated(context)) {
+            return const LoginScreen(isGuestMode: true);
+          }
           final extraMap = state.extra as Map<String, dynamic>;
           return PaymentScreen(
-              orderRequestDetails:
-                  extraMap['orderRequestDetails'] as OrderCreateRequest?,
-              orderResponseDetails:
-                  extraMap['orderResponseDetails'] as OrderCreateProducts?,
-              subRequestDetails: extraMap['subRequestDetails']
-                  as CreateSubscriptionRequestModel?,
-              isSubscription: extraMap['isSubscription'],
-              walletRequestDetails:
-                  extraMap['walletRequestDetails'] as GetAddressResponse?,
-              isWallet: extraMap['isWallet'],
-              subOrderID: extraMap['subOrderID'],
-              subResponseDetails: extraMap['subResponseDetails']
-                  as CreateSubscriptionResponseModel?,
-              subScriptionAmount: extraMap['subScriptionAmount']);
+            orderRequestDetails:
+                extraMap['orderRequestDetails'] as OrderCreateRequest?,
+            orderResponseDetails:
+                extraMap['orderResponseDetails'] as OrderCreateProducts?,
+            subRequestDetails: extraMap['subRequestDetails']
+                as CreateSubscriptionRequestModel?,
+            isSubscription: extraMap['isSubscription'],
+            walletRequestDetails:
+                extraMap['walletRequestDetails'] as GetAddressResponse?,
+            isWallet: extraMap['isWallet'],
+            subOrderID: extraMap['subOrderID'],
+            subResponseDetails: extraMap['subResponseDetails']
+                as CreateSubscriptionResponseModel?,
+            subScriptionAmount: extraMap['subScriptionAmount'],
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.paytmPayment.path,
         name: AppRoutes.paytmPayment.name,
         builder: (context, state) {
+          if (!_isAuthenticated(context)) {
+            return const LoginScreen(isGuestMode: true);
+          }
           final extraMap = state.extra as Map<String, dynamic>;
           return PaytmWebviewScreen(
-              orderRequestDetails:
-                  extraMap['orderRequestDetails'] as OrderCreateRequest?,
-              orderResponseDetails:
-                  extraMap['orderResponseDetails'] as OrderCreateProducts?,
-              subRequestDetails: extraMap['subRequestDetails']
-                  as CreateSubscriptionRequestModel?,
-              isSubscription: extraMap['isSubscription'],
-              walletRequestDetails:
-                  extraMap['walletRequestDetails'] as GetAddressResponse?,
-              isWallet: extraMap['isWallet'],
-              subOrderID: extraMap['subOrderID'],
-              subResponseDetails: extraMap['subResponseDetails']
-                  as CreateSubscriptionResponseModel?,
-              subScriptionAmount: extraMap['subScriptionAmount']);
+            orderRequestDetails:
+                extraMap['orderRequestDetails'] as OrderCreateRequest?,
+            orderResponseDetails:
+                extraMap['orderResponseDetails'] as OrderCreateProducts?,
+            subRequestDetails: extraMap['subRequestDetails']
+                as CreateSubscriptionRequestModel?,
+            isSubscription: extraMap['isSubscription'],
+            walletRequestDetails:
+                extraMap['walletRequestDetails'] as GetAddressResponse?,
+            isWallet: extraMap['isWallet'],
+            subOrderID: extraMap['subOrderID'],
+            subResponseDetails: extraMap['subResponseDetails']
+                as CreateSubscriptionResponseModel?,
+            subScriptionAmount: extraMap['subScriptionAmount'],
+          );
         },
       ),
       GoRoute(
@@ -166,7 +192,8 @@ class AppRoute {
                         return SubscriptionProductDetailModel.fromJson(e);
                       } else {
                         throw Exception(
-                            'Invalid type in subProductDetails: ${e.runtimeType}');
+                          'Invalid type in subProductDetails: ${e.runtimeType}',
+                        );
                       }
                     }).toList() ??
                     <SubscriptionProductDetailModel>[],
@@ -188,7 +215,10 @@ class AppRoute {
       GoRoute(
         path: AppRoutes.wallet.path,
         name: AppRoutes.wallet.name,
-        builder: (context, state) => const WalletScreen(),
+        builder: (context, state) => _authenticatedOnly(
+          context,
+          const WalletScreen(),
+        ),
       ),
       GoRoute(
         path: AppRoutes.cart.path,
@@ -198,7 +228,9 @@ class AppRoute {
       GoRoute(
         path: AppRoutes.checkout.path,
         name: AppRoutes.checkout.name,
-        builder: (context, state) => CheckoutScreen(
+        builder: (context, state) => _authenticatedOnly(
+          context,
+          CheckoutScreen(
             deliveryNote: state.extra != null
                 ? (state.extra as Map<String, dynamic>)['deliveryNote']
                 : '',
@@ -207,7 +239,9 @@ class AppRoute {
                 : '',
             isSubscription: state.extra != null
                 ? (state.extra as Map<String, dynamic>)['isSubscription']
-                : false),
+                : false,
+          ),
+        ),
       ),
       GoRoute(
         path: AppRoutes.nameScreen.path,
@@ -245,7 +279,10 @@ class AppRoute {
       GoRoute(
         path: AppRoutes.editProfile.path,
         name: AppRoutes.editProfile.name,
-        builder: (context, state) => const EditProfileScreen(),
+        builder: (context, state) => _authenticatedOnly(
+          context,
+          const EditProfileScreen(),
+        ),
       ),
       GoRoute(
         path: AppRoutes.orderSuccess.path,
@@ -254,8 +291,9 @@ class AppRoute {
           final extra = state.extra as Map<String, dynamic>;
 
           return OrderSuccessScreen(
-              isSubscription: extra['isSubscription'],
-              orderDetails: extra['orderDetails'] as OrderSuccessRouteModel);
+            isSubscription: extra['isSubscription'],
+            orderDetails: extra['orderDetails'] as OrderSuccessRouteModel,
+          );
         },
       ),
       GoRoute(
@@ -273,10 +311,13 @@ class AppRoute {
       GoRoute(
         path: AppRoutes.createSubscription.path,
         name: AppRoutes.createSubscription.name,
-        builder: (context, state) => CreateSubscription(
-          productDetails: state.extra != null
-              ? (state.extra as Map<String, dynamic>)['productDetails']
-              : '',
+        builder: (context, state) => _authenticatedOnly(
+          context,
+          CreateSubscription(
+            productDetails: state.extra != null
+                ? (state.extra as Map<String, dynamic>)['productDetails']
+                : '',
+          ),
         ),
       ),
       GoRoute(
@@ -306,7 +347,10 @@ class AppRoute {
       GoRoute(
         path: AppRoutes.subHistory.path,
         name: AppRoutes.subHistory.name,
-        builder: (context, state) => SubscriptionsHistoryScreen(),
+        builder: (context, state) => _authenticatedOnly(
+          context,
+          SubscriptionsHistoryScreen(),
+        ),
       ),
     ],
   );
