@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+	<dict>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleDisplayName</key>
+		<string>{{app_name}}</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundleName</key>
+		<string>{{app_name}}</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>$(MARKETING_VERSION)</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleVersion</key>
+		<string>$(CURRENT_PROJECT_VERSION)</string>
+		<key>LSRequiresIPhoneOS</key>
+		<true/>
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
+		<key>UIMainStoryboardFile</key>
+		<string>Main</string>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>UISupportedInterfaceOrientations~ipad</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true/>
+		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<true/>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>We use your location to provide accurate delivery services while you are using the app.</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>Location access is only used while the app is in use to improve delivery accuracy. The app does not track or access location in the background.</string>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.653382699997-ccmg4kgjlei3f7difs4uf5e0huit1312</string>
+					<string>app-1-201776493956-ios-2f76d7fda96a5334c659d1</string>
+				</array>
+			</dict>
+		</array>
+		<key>LSApplicationQueriesSchemes</key>
+<array>
+<string>upi</string>
+<string>paytm</string>
+<string>paytmmp</string>
+<string>phonepe</string>
+<string>tez</string>
+<string>gpay</string>
+<string>myairtelupi</string>
+<string>credpay</string>
+<string>bhim</string>
+<string>mobikwik</string>
+<string>freecharge</string>
+<string>amazonpay</string>
+<string>navi</string>
+<string>kiwi</string>
+<string>payzapp</string>
+<string>jupiter</string>
+<string>omnicard</string>
+<string>icici</string>
+<string>popclubapp</string>
+<string>sbiyono</string>
+<string>myjio</string>
+<string>slice-upi</string>
+<string>bobupi</string>
+<string>shriramone</string>
+<string>whatsapp</string>
+<string>com.rediff.pay</string>
+<string>hdfcbanknb</string>
+<string>aunb</string>
+<string>yonolitenb</string>
+<string>yesirisnb</string>
+<string>fedmobilenb</string>
+<string>axisbanknb</string>
+</array>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+		</array>
+		<key>FirebaseAppDelegateProxyEnabled</key>
+		<true/>
+		<key>UIStatusBarHidden</key>
+		<false/>
+	</dict>
+</plist>

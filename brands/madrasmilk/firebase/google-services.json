@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "170394280458",
+    "project_id": "madrasmilk-1f52e",
+    "storage_bucket": "madrasmilk-1f52e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:170394280458:android:9dcf8e5f53ef082d0835f3",
+        "android_client_info": {
+          "package_name": "ai.pixeltech.madrasmilk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZk747HCaMuxl_91A0Ww1U5rGRGYsCaNU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

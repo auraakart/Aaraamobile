@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Without this, iOS never calls
+	     didRegisterForRemoteNotificationsWithDeviceToken, so no APNS token is
+	     ever issued and FirebaseMessaging.getAPNSToken() returns null forever.
+	     Xcode's automatic signing rewrites this to "production" when archiving
+	     for distribution, so one file covers both. -->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

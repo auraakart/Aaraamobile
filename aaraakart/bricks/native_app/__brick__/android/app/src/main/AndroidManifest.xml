@@ -1,0 +1,129 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" package="{{package_name}}">
+
+    <!-- Internet is mandatory for FCM -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Optional permissions -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- This is optional; needed only for push notifications on Android 13+ -->
+    <!-- You said you don't want visible notifications, so this can be removed or left if targeting Android 13+ -->
+    <!-- <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/> -->
+
+    <application android:name="${applicationName}" android:label="{{app_name}}" android:icon="@mipmap/launcher_icon" android:enableOnBackInvokedCallback="false">
+
+        <!-- Firebase Maps API key (if used) -->
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="{{maps_native_key}}"/>
+
+        <!-- Flutter Activity -->
+        <activity android:name=".MainActivity" android:launchMode="singleTop" android:theme="@style/LaunchTheme" android:exported="true" android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode" android:hardwareAccelerated="true" android:windowSoftInputMode="adjustResize">
+            <meta-data android:name="io.flutter.embedding.android.NormalTheme" android:resource="@style/NormalTheme"/>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <!-- Flutter plugin registration -->
+        <meta-data android:name="flutterEmbedding" android:value="2"/>
+
+        <!-- Firebase Cloud Messaging service -->
+        <service android:name="com.google.firebase.messaging.FirebaseMessagingService" tools:replace="android:exported" android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <!-- Required for FCM to show notifications if used -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="high_importance_channel"/>
+
+    </application>
+
+    <!-- Required for text processing in some Flutter plugins -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Required so the checkout webview can hand UPI intents to installed UPI
+             apps (Android 11+ package visibility) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="upi"/>
+        </intent>
+        <!-- The app specific UPI links the gateways hand out once the shopper
+             picks an app on the payment page. Without these the intent cannot
+             be resolved even when the app is installed. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="paytmmp"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="phonepe"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="tez"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="gpay"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="bhim"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="credpay"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="amazonpay"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="mobikwik"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="freecharge"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="payzapp"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="myairtelupi"/>
+        </intent>
+        <!-- The UPI apps themselves, so the ones that are installed can be
+             resolved. -->
+        <package android:name="net.one97.paytm"/>
+        <package android:name="com.google.android.apps.nbu.paisa.user"/>
+        <package android:name="com.phonepe.app"/>
+        <package android:name="in.org.npci.upiapp"/>
+        <package android:name="com.amazon.mShop.android.shopping"/>
+        <package android:name="com.whatsapp"/>
+        <package android:name="com.bhim.axis.pay"/>
+        <package android:name="com.mobikwik_new"/>
+        <package android:name="com.freecharge.android"/>
+        <package android:name="com.myairtelapp"/>
+        <package android:name="com.jio.myjio"/>
+        <package android:name="com.sbi.upi"/>
+        <package android:name="com.csam.icici.bank.imobile"/>
+        <package android:name="com.snapwork.hdfc"/>
+        <package android:name="com.axis.mobile"/>
+        <package android:name="com.fisglobal.usb.mobilebanking"/>
+        <package android:name="com.unionbankofindia"/>
+        <package android:name="com.canarabank.mobility"/>
+        <package android:name="com.bankofbaroda.mconnect"/>
+        <package android:name="com.idfcfirstbank.smartbanking"/>
+        <package android:name="com.kotak.bank.mobile"/>
+        <package android:name="com.cok.cokmconnect"/>
+        <package android:name="com.ubi.uboi.mpassbook"/>
+    </queries>
+
+</manifest>
