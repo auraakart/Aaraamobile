@@ -24,10 +24,9 @@ class StorageCubit extends Cubit<StorageState> {
         );
       }
 
-      // Remove the legacy plaintext copy once secure storage is authoritative.
       await SharedPrefHelper.removeData(AppConstants.userPrefKey);
       emit(state.copyWith(userData: userData));
-    } catch (e) {
+    } catch (_) {
       if (kDebugMode) {
         debugPrint('Unable to persist user identity data securely.');
       }
@@ -46,7 +45,7 @@ class StorageCubit extends Cubit<StorageState> {
         PushNotificationService.instance
             .syncAudienceTopics(isGuest: isGuestMode != false),
       );
-    } catch (e) {
+    } catch (_) {
       if (kDebugMode) {
         debugPrint('Unable to persist guest mode.');
       }
@@ -58,18 +57,32 @@ class StorageCubit extends Cubit<StorageState> {
   bool? get isGuestMode => state.isGuestMode;
 
   Future<void> removeAddress() async {
+    await SecureStorageHelper.removeData(AppConstants.addressPrefKey);
     await SharedPrefHelper.removeData(AppConstants.addressPrefKey);
     emit(state.copyWith(addressData: []));
   }
 
   Future<void> getAddress() async {
-    final List<dynamic>? addressList =
-        await SharedPrefHelper.getJsonData(AppConstants.addressPrefKey);
+    dynamic stored =
+        await SecureStorageHelper.getJsonData(AppConstants.addressPrefKey);
 
-    if (addressList != null && addressList.isNotEmpty) {
-      final parsedAddresses =
-          addressList.map((item) => GetAddressResponse.fromJson(item)).toList();
+    if (stored is! List) {
+      final legacy =
+          await SharedPrefHelper.getJsonData(AppConstants.addressPrefKey);
+      if (legacy is List) {
+        stored = legacy;
+        await SecureStorageHelper.saveJsonData(
+          AppConstants.addressPrefKey,
+          legacy,
+        );
+        await SharedPrefHelper.removeData(AppConstants.addressPrefKey);
+      }
+    }
 
+    if (stored is List && stored.isNotEmpty) {
+      final parsedAddresses = stored
+          .map((item) => GetAddressResponse.fromJson(item))
+          .toList();
       emit(state.copyWith(addressData: parsedAddresses));
     } else {
       emit(state.copyWith(addressData: []));
