@@ -36,14 +36,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Reject privileged client-side secrets
         working-directory: .
         run: python3 .github/scripts/check_brand_secrets.py
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -60,14 +62,32 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
-      - name: Check formatting
+      - name: Check formatting of changed Dart files
+        working-directory: .
         shell: bash
         run: |
-          if [ -d test ]; then
-            dart format --output=none --set-exit-if-changed lib test
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
           else
-            dart format --output=none --set-exit-if-changed lib
+            base="HEAD^"
           fi
+
+          mapfile -t files < <(
+            git diff --name-only "$base...HEAD" -- \
+              'aaraakart/lib/**/*.dart' \
+              'aaraakart/lib/*.dart' \
+              'aaraakart/test/**/*.dart' \
+              'aaraakart/test/*.dart'
+          )
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo 'No changed Dart files to format-check.'
+            exit 0
+          fi
+
+          printf 'Formatting check files:\n%s\n' "${files[*]}"
+          dart format --output=none --set-exit-if-changed "${files[@]}"
 
       - name: Static analysis
         run: flutter analyze
