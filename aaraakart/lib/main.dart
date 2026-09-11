@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:aaraa_kart/app/router/app_router.dart';
 import 'package:aaraa_kart/core/config/brand_config.dart';
@@ -48,18 +46,9 @@ Future<void> main() async {
 
   runApp(const MyApp());
 
-  // Push notification initialization is intentionally kept separate from
-  // Firebase setup so notification permission UX can be introduced safely.
-  // Enable this only from the appropriate user-facing permission flow.
-  unawaited(
-    PushNotificationService.instance.initialize().catchError(
-      (Object e) {
-        if (kDebugMode) {
-          debugPrint('FCM: initialization failed: $e');
-        }
-      },
-    ),
-  );
+  // Keep notification permission user-driven. PushNotificationService.initialize()
+  // requests notification permission, so it must be invoked from the product's
+  // explicit permission/onboarding flow rather than automatically at app launch.
 }
 
 class MyApp extends StatelessWidget {
