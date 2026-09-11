@@ -21,7 +21,7 @@ on:
       - '.github/workflows/aaraamobile-ci.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: aaraamobile-ci-${{ github.ref }}
@@ -39,27 +39,6 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-
-      - name: Apply payment log sanitizer on hardening branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/hardening/security-baseline'
-        working-directory: .
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 .github/scripts/sanitize_payment_logs.py
-          if git diff --quiet -- \
-            aaraakart/lib/presentation/payment/payment_screen.dart \
-            aaraakart/lib/presentation/payment/paytm_webview_screen.dart; then
-            echo 'Payment logging is already sanitized.'
-            exit 0
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add \
-            aaraakart/lib/presentation/payment/payment_screen.dart \
-            aaraakart/lib/presentation/payment/paytm_webview_screen.dart
-          git commit -m 'security: suppress sensitive payment diagnostics'
-          git push origin HEAD:hardening/security-baseline
 
       - name: Reject privileged client-side secrets
         working-directory: .
