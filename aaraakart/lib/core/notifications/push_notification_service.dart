@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:aaraa_kart/app/utils/secure_storage.dart';
 import 'package:aaraa_kart/core/config/brand_config.dart';
 import 'package:aaraa_kart/core/notifications/local_notification_service.dart';
 import 'package:aaraa_kart/core/notifications/notification_navigator.dart';
@@ -8,7 +9,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -26,7 +26,7 @@ class PushNotificationService {
 
   static final PushNotificationService instance = PushNotificationService._();
 
-  static const String _tokenPrefKey = 'FCM_DEVICE_TOKEN';
+  static const String _tokenStorageKey = 'FCM_DEVICE_TOKEN';
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
@@ -123,8 +123,7 @@ class PushNotificationService {
   Future<void> _publishToken(String token) async {
     _token = token;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_tokenPrefKey, token);
+      await SecureStorageHelper.saveJsonData(_tokenStorageKey, token);
     } catch (e) {
       _debugLog('Could not persist notification token.');
     }
