@@ -32,6 +32,10 @@ migrate_working_dir/
 .pub/
 /build/
 
+# Mason local/generated state. mason.yaml is the portable source of truth.
+.mason/
+mason-lock.json
+
 # Symbolication related
 app.*.symbols
 
