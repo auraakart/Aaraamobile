@@ -62,6 +62,14 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
+      - name: Verify dependency lockfile is current
+        shell: bash
+        run: |
+          if ! git diff --exit-code -- pubspec.lock; then
+            echo '::error::pubspec.lock is out of date. Run flutter pub get with the supported Flutter toolchain and commit the resolved lockfile.'
+            exit 1
+          fi
+
       - name: Install Mason CLI
         shell: bash
         run: |
