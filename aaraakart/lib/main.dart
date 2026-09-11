@@ -39,8 +39,9 @@ Future<void> main() async {
 
   setupDI();
 
-  CachedNetworkImage.logLevel =
-      kDebugMode ? CacheManagerLogLevel.debug : CacheManagerLogLevel.none;
+  if (kDebugMode) {
+    CachedNetworkImage.logLevel = CacheManagerLogLevel.debug;
+  }
 
   await ScreenUtil.ensureScreenSize();
 
