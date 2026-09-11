@@ -1,3 +1,4 @@
+import 'package:aaraa_kart/core/errors/app_exception.dart';
 import 'package:aaraa_kart/core/network/api_constants.dart';
 import 'package:aaraa_kart/data/model/customer_address.dart';
 import 'package:aaraa_kart/data/model/send_otp_response.dart';
@@ -11,15 +12,16 @@ class AuthRepository {
   final Dio dioV2;
 
   AuthRepository(this.dio, this.dioV2);
+
   Future<SendOtpResponse> sendOTP(String mobileNumber) async {
     try {
-      Map<String, dynamic> payload = {"phone": mobileNumber};
-
+      final payload = <String, dynamic>{'phone': mobileNumber};
       final response = await dioV2.post(ApiConstants.SendOTP, data: payload);
-
       return SendOtpResponse.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Failed to Send OTP: $e');
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    } catch (_) {
+      throw const RepositoryException('Unable to send OTP. Please try again.');
     }
   }
 
@@ -29,29 +31,23 @@ class AuthRepository {
         '/${ApiConstants.CreateCustomer}/$customerID',
         queryParameters: const {'force': true},
       );
-
       return response.statusCode == 200;
-    } on DioException catch (e) {
-      return false;
-    } catch (e) {
-      return false;
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    } catch (_) {
+      throw const RepositoryException('Unable to delete profile. Please try again.');
     }
   }
 
   Future<VerifyOtpResponse> verifyOTP(String mobileNumber, String otp) async {
     try {
-      Map<String, dynamic> payload = {"phone": mobileNumber, "otp": otp};
-
+      final payload = <String, dynamic>{'phone': mobileNumber, 'otp': otp};
       final response = await dioV2.post(ApiConstants.VerifyOTP, data: payload);
-
       return VerifyOtpResponse.fromJson(response.data);
-    } on DioException catch (e) {
-      final errorMessage = e.error is String
-          ? e.error
-          : "Something went wrong. Please try again.";
-      throw errorMessage.toString();
-    } catch (e) {
-      throw Exception("Unexpected error: $e");
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    } catch (_) {
+      throw const RepositoryException('Unable to verify OTP. Please try again.');
     }
   }
 
@@ -66,17 +62,15 @@ class AuthRepository {
         return CustomerCreateResult.success(
           UserCreateResponseModel.fromJson(response.data),
         );
-      } else {
-        return CustomerCreateResult.failure("error");
       }
-    } on DioException catch (dioError) {
-      final errorData = dioError.response?.data["message"];
       return CustomerCreateResult.failure(
-        '${errorData ?? dioError.message}',
+        'Unable to create customer. Please try again.',
       );
-    } catch (e) {
+    } on DioException catch (error) {
+      return CustomerCreateResult.failure(_mapDioException(error).message);
+    } catch (_) {
       return CustomerCreateResult.failure(
-        'Unexpected error: $e',
+        'Unable to create customer. Please try again.',
       );
     }
   }
@@ -91,38 +85,38 @@ class AuthRepository {
         return CustomerCreateResult.success(
           UserCreateResponseModel.fromJson(response.data),
         );
-      } else {
-        return CustomerCreateResult.failure("Customer not found");
       }
-    } on DioException catch (dioError) {
-      final errorData = dioError.response?.data?["message"];
+      return CustomerCreateResult.failure('Customer not found.');
+    } on DioException catch (error) {
+      return CustomerCreateResult.failure(_mapDioException(error).message);
+    } catch (_) {
       return CustomerCreateResult.failure(
-        errorData ?? dioError.message ?? "Request failed",
-      );
-    } catch (e) {
-      return CustomerCreateResult.failure(
-        'Unexpected error: $e',
+        'Unable to load customer details. Please try again.',
       );
     }
   }
 
   Future<GetAddressResponse> createAddress(
-      GetAddressResponse addressData) async {
+    GetAddressResponse addressData,
+  ) async {
     try {
       final response = await dioV2.post(
         ApiConstants.Address,
         data: addressData.toJson(),
         queryParameters: {'customer_id': addressData.customerId},
       );
-
       return GetAddressResponse.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Unable to Create Address: $e');
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    } catch (_) {
+      throw const RepositoryException('Unable to create address. Please try again.');
     }
   }
 
-  Future<GetAddressResponse> deleteAddress(
-      {required String addrID, required String userId}) async {
+  Future<GetAddressResponse> deleteAddress({
+    required String addrID,
+    required String userId,
+  }) async {
     try {
       final response = await dioV2.delete(
         ApiConstants.Address,
@@ -131,37 +125,32 @@ class AuthRepository {
           'addr_id': addrID,
         },
       );
-
       return GetAddressResponse.fromJson(response.data);
-    } on DioException catch (e) {
-      final errorMessage = e.error is String
-          ? e.error
-          : "Something went wrong. Please try again.";
-      throw errorMessage.toString();
-    } catch (e) {
-      throw Exception("Unexpected error: $e");
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    } catch (_) {
+      throw const RepositoryException('Unable to delete address. Please try again.');
     }
   }
 
-  Future<GetAddressResponse> updateAddress(
-      {required String addrID, required String userId}) async {
+  Future<GetAddressResponse> updateAddress({
+    required String addrID,
+    required String userId,
+  }) async {
     try {
-      final response =
-          await dioV2.patch(ApiConstants.Address, queryParameters: {
-        'customer_id': userId,
-        'addr_id': addrID,
-      }, data: {
-        'is_primary': 1
-      });
-
+      final response = await dioV2.patch(
+        ApiConstants.Address,
+        queryParameters: {
+          'customer_id': userId,
+          'addr_id': addrID,
+        },
+        data: const {'is_primary': 1},
+      );
       return GetAddressResponse.fromJson(response.data);
-    } on DioException catch (e) {
-      final errorMessage = e.error is String
-          ? e.error
-          : "Something went wrong. Please try again.";
-      throw errorMessage.toString();
-    } catch (e) {
-      throw Exception("Unexpected error: $e");
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    } catch (_) {
+      throw const RepositoryException('Unable to update address. Please try again.');
     }
   }
 
@@ -172,18 +161,42 @@ class AuthRepository {
         queryParameters: {'customer_id': userId},
       );
 
+      if (response.data is! List) {
+        throw const RepositoryException('Unexpected address response from server.');
+      }
+
       return (response.data as List)
           .map((item) => GetAddressResponse.fromJson(item))
           .toList();
-    } on DioException catch (e) {
-      final errorMessage = e.error is String
-          ? e.error
-          : "Something went wrong. Please try again.";
-      throw errorMessage.toString();
-    } catch (e) {
-      throw Exception("Unexpected error: $e");
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    } on AppException {
+      rethrow;
+    } catch (_) {
+      throw const RepositoryException('Unable to load addresses. Please try again.');
+    }
+  }
+
+  AppException _mapDioException(DioException error) {
+    final statusCode = error.response?.statusCode;
+
+    if (statusCode == 401 || statusCode == 403) {
+      return const UnauthorizedException();
+    }
+    if (statusCode != null && statusCode >= 500) {
+      return const ServerException();
+    }
+
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.connectionError:
+        return const NetworkException();
+      case DioExceptionType.cancel:
+        return const RepositoryException('Request was cancelled.');
+      default:
+        return const RepositoryException();
     }
   }
 }
-
-
