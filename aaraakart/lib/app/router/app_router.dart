@@ -21,7 +21,6 @@ import 'package:aaraa_kart/presentation/home/product_list.dart';
 import 'package:aaraa_kart/presentation/location/google_maps_screen.dart';
 import 'package:aaraa_kart/presentation/location/location_selection_screen.dart';
 import 'package:aaraa_kart/presentation/menu/edit_profile.dart';
-
 import 'package:aaraa_kart/presentation/menu/menu_screen.dart';
 import 'package:aaraa_kart/presentation/order/order_failed_screen.dart';
 import 'package:aaraa_kart/presentation/order/order_success_screen.dart';
@@ -32,6 +31,7 @@ import 'package:aaraa_kart/presentation/subscriptions/create_subscription.dart';
 import 'package:aaraa_kart/presentation/subscriptions/subscriptions_history.dart';
 import 'package:aaraa_kart/presentation/wallet/wallet_screen.dart';
 import 'package:aaraa_kart/presentation/widgets/bottom_nav_bar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -44,7 +44,7 @@ class AppRoute {
 
   static GoRouter appRouter = GoRouter(
     initialLocation: AppRoutes.splash.path,
-    debugLogDiagnostics: true,
+    debugLogDiagnostics: kDebugMode,
     routes: [
       GoRoute(
         path: AppRoutes.splash.path,
@@ -166,7 +166,7 @@ class AppRoute {
                         return SubscriptionProductDetailModel.fromJson(e);
                       } else {
                         throw Exception(
-                            "Invalid type in subProductDetails: ${e.runtimeType}");
+                            'Invalid type in subProductDetails: ${e.runtimeType}');
                       }
                     }).toList() ??
                     <SubscriptionProductDetailModel>[],
@@ -201,10 +201,10 @@ class AppRoute {
         builder: (context, state) => CheckoutScreen(
             deliveryNote: state.extra != null
                 ? (state.extra as Map<String, dynamic>)['deliveryNote']
-                : "",
+                : '',
             subscriptionDetails: state.extra != null
                 ? (state.extra as Map<String, dynamic>)['subscriptionDetails']
-                : "",
+                : '',
             isSubscription: state.extra != null
                 ? (state.extra as Map<String, dynamic>)['isSubscription']
                 : false),
@@ -254,8 +254,8 @@ class AppRoute {
           final extra = state.extra as Map<String, dynamic>;
 
           return OrderSuccessScreen(
-              isSubscription: extra["isSubscription"],
-              orderDetails: extra["orderDetails"] as OrderSuccessRouteModel);
+              isSubscription: extra['isSubscription'],
+              orderDetails: extra['orderDetails'] as OrderSuccessRouteModel);
         },
       ),
       GoRoute(
@@ -264,9 +264,9 @@ class AppRoute {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           return OrderFailedScreen(
-            errorMessage: extra?["errorMessage"] as String?,
-            errorCode: extra?["errorCode"] as String?,
-            transactionId: extra?["transactionId"] as String?,
+            errorMessage: extra?['errorMessage'] as String?,
+            errorCode: extra?['errorCode'] as String?,
+            transactionId: extra?['transactionId'] as String?,
           );
         },
       ),
@@ -311,5 +311,3 @@ class AppRoute {
     ],
   );
 }
-
-
