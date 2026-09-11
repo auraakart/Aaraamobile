@@ -12,7 +12,6 @@ import 'package:aaraa_kart/cubit/product/product_cubit.dart';
 import 'package:aaraa_kart/cubit/storage/storage_cubit.dart';
 import 'package:aaraa_kart/cubit/subscriptions/subscriptions_cubit.dart';
 import 'package:aaraa_kart/cubit/wallet/wallet_cubit.dart';
-import 'package:aaraa_kart/core/notifications/in_app_messaging_service.dart';
 import 'package:aaraa_kart/core/notifications/push_notification_service.dart';
 import 'package:aaraa_kart/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
