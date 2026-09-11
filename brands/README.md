@@ -1,78 +1,112 @@
 # White-label brands
 
-This app builds multiple brands from one codebase. Each brand is fully described
-by `brands/<brandId>/` — the **single source of truth**. No brand values are
-hardcoded in `lib/` or the native projects.
+This app builds multiple brands from one codebase. Each brand is described by
+`brands/<brandId>/`, while structural native configuration lives in
+`aaraakart/bricks/native_app/`. Together they form the source of truth for a
+brand build.
 
 `brands/` lives at the workspace root (a sibling of the Flutter project,
-`aaraakart/`), not inside the app itself, so it can be shared across sibling
-apps in the workspace. `tool/apply_brand.dart` resolves it via
-`brandDirFor()` in `tool/brand_utils.dart`, which looks one directory above
-the Flutter project root.
+`aaraakart/`). `tool/apply_brand.dart` resolves it via `brandDirFor()` in
+`tool/brand_utils.dart`, which looks one directory above the Flutter project
+root.
+
+## Security boundary
+
+Tracked brand configuration is **client configuration**, not a secret store.
+Anything included in `config.json`, Dart source, Android/iOS resources, or the
+mobile binary must be treated as recoverable by an end user.
+
+Do **not** store any of the following in a tracked brand config or mobile source:
+
+- WooCommerce/admin consumer secrets
+- privileged wallet credentials
+- payment merchant/signing secrets
+- keystore passwords
+- backend service credentials
+
+Those credentials belong in an authenticated backend/BFF or secure CI/release
+secret store. Mobile code should use user-scoped authentication to backend
+endpoints instead of authenticating as the store/server.
+
+Client API keys that must ship in the app, such as Google Maps keys, must be
+restricted at the provider by API and application identity/package/signing
+certificate.
 
 ## Layout
 
-```
+```text
 brands/<brandId>/
-├── config.json          # every brand value (see brands/tfv/config.json)
+├── config.json          # client-safe brand/runtime values only
 ├── icon/icon.png        # 1024×1024 launcher icon source
 ├── splash/splash.png    # splash screen source
-├── keystore/<file>.jks  # release signing keystore (optional)
 ├── firebase/
-│   ├── google-services.json        # Android Firebase (source of truth)
-│   └── GoogleService-Info.plist    # iOS Firebase (source of truth)
+│   ├── google-services.json        # Android Firebase source
+│   └── GoogleService-Info.plist    # iOS Firebase source
 └── assets/
     ├── logo.png  banner.jpg  success.json
     └── icons/<category>-icon.svg
 ```
 
+A local `keystore/` directory may be used by a controlled release process, but
+keystores and passwords must not be committed. Repository `.gitignore` rules
+exclude common signing material.
+
 ### Firebase
 
-Firebase values are **not** duplicated in `config.json`. The native
-`google-services.json` and `GoogleService-Info.plist` are the source of truth;
-`apply_brand.dart` parses them to regenerate `lib/firebase_options.dart`. To
-change a brand's Firebase project, just replace those two files.
+Firebase values are not duplicated manually in Dart. The native
+`google-services.json` and `GoogleService-Info.plist` are the brand inputs;
+`apply_brand.dart` parses them to regenerate `lib/firebase_options.dart`.
+Review Firebase configuration separately for provider-side restrictions and
+least privilege.
 
 ### Signing
 
-`config.json`'s `keystore` block (`storeFile`, `keyAlias`, `storePassword`,
-`keyPassword`) plus a keystore in `brands/<id>/keystore/` configures release
-signing. `apply_brand.dart` copies the keystore into `android/app/` and writes
-`android/key.properties`. If the block is empty (no password), the build falls
-back to debug signing — fill in the passwords to produce a store-ready build.
+Release signing is **fail closed**. A release build must not silently fall back
+to the debug keystore.
+
+Tracked `config.json` files must keep `storePassword` and `keyPassword` empty.
+For a store/release build, provision the release keystore and
+`android/key.properties` from the secure release environment after brand
+generation, or use an equivalent CI signing mechanism. Never commit signing
+passwords or production keystores.
+
+Debug builds remain available without release signing material.
 
 ## How it works
 
-`android/` and `ios/` are **not committed** — they are generated fresh on
-every `apply_brand.dart` run (git-ignored, like Expo's `prebuild`). The
-brand-neutral native project template lives in `bricks/native_app/`, a
-[mason](https://pub.dev/packages/mason_cli) brick. Brand identity (bundle id,
-app name, version, Maps key) is baked in via mustache variables in the
-template; everything else (Gradle config, permissions, Firebase plugin wiring,
-Podfile, Xcode project) is static and brand-neutral.
+The portable native template lives in `aaraakart/bricks/native_app/`, a Mason
+brick. `aaraakart/mason.yaml` is the portable Mason source of truth; `.mason/`
+and `mason-lock.json` are local/generated state and must not be committed.
 
-Three layers consume `config.json`:
+Brand identity (bundle ID, package name, app name, version, Maps key) is baked
+in via mustache variables in the template. Structural settings such as Gradle,
+permissions, Firebase plugin wiring, Podfile, and Xcode project configuration
+belong in the brick, not in a generated platform tree.
+
+Three layers consume brand inputs:
 
 1. **Native skeleton** — `apply_brand.dart` runs `mason make native_app` to
-   regenerate `android/` + `ios/` from `bricks/native_app/__brick__/`,
-   overwriting the identity fields for the current brand.
+   regenerate `android/` + `ios/` from `bricks/native_app/__brick__/` using the
+   current brand identity.
 2. **Runtime** — `apply_brand.dart` copies the active config to
-   `assets/brand/config.json`; at startup `BrandConfig.load()`
-   (`lib/core/config/brand_config.dart`) parses it. Drives theme colors, app
-   name, content, feature flags, Maps key, and API credentials.
-3. **Build time** — `apply_brand.dart` copies in the native Firebase files,
-   generates app icons, splash, release signing (`key.properties`), and
-   regenerates `lib/firebase_options.dart` from the native Firebase files.
+   `assets/brand/config.json`; `BrandConfig.load()` parses client-safe theme,
+   content, Maps, endpoint and feature configuration.
+3. **Build time** — `apply_brand.dart` copies native Firebase files and can
+   generate icons/splash assets. Production signing material is supplied
+   separately by the secure release environment.
+
+Some imported/generated platform files may currently exist in the repository
+for compatibility, but the native brick is authoritative. A structural native
+change must be made in the brick and validated by regenerating a brand.
 
 ### Editing the native template
 
-Never hand-edit `android/` or `ios/` directly — they get overwritten on the
-next `apply_brand.dart` run. To change something structural (a new permission,
-a Gradle dependency, Podfile changes), edit the corresponding file under
-`bricks/native_app/__brick__/` instead. Brand-specific values there use
-mustache syntax (`{{bundle_id}}`, `{{app_name}}`, `{{version}}`,
-`{{build_number}}`, `{{maps_native_key}}`) — see `bricks/native_app/brick.yaml`
-for the variable list.
+Do not make a structural fix only in generated `android/` or `ios/` files; it
+will be lost at the next brand regeneration. Make the durable change under
+`bricks/native_app/__brick__/` and regenerate the active brand to validate it.
+Brand-specific variables use mustache syntax such as `{{bundle_id}}`,
+`{{package_name}}`, `{{app_name}}`, `{{version}}`, `{{build_number}}`, and
+`{{maps_native_key}}`.
 
 ## Build a brand locally
 
@@ -80,28 +114,38 @@ for the variable list.
 dart pub global activate mason_cli
 flutter pub get
 dart run tool/apply_brand.dart madrasmilk
-flutter build ios --config-only
-flutter build apk
+flutter build apk --debug
 ```
 
-Switching brands is just re-running the script — it fully regenerates
-`android/`/`ios/` from the template and overwrites the previous brand, so it
-is safe to switch back and forth.
+For a release build, provision signing material securely after brand
+application, then run the release build. The build is expected to fail when
+release signing is absent.
 
-`android/`, `ios/`, `assets/brand/`, `flutter_launcher_icons.yaml`, and
-`flutter_native_splash.yaml` are generated build state and are git-ignored.
+Switching brands is done by re-running the script, which regenerates the native
+brand state from the template.
 
-## Build a brand in CI
+## CI validation
 
-Run the **Build (multi-brand)** GitHub Actions workflow
-(`.github/workflows/build.yml`) and pick the brand from the dropdown.
+The Aaraamobile CI workflow validates:
+
+- tracked brand configs contain no privileged server/signing secrets
+- brand regeneration works on a clean runner
+- changed Dart code can be formatted for validation
+- static analysis contains no blocking analyzer errors
+- Flutter tests pass
+- the Android debug APK compiles
+
+Warnings and legacy deprecations remain visible and should be reduced in focused
+maintenance work rather than hidden.
 
 ## Add a new brand
 
-1. Copy an existing folder: `cp -r brands/tfv brands/<newId>`.
-2. Edit `brands/<newId>/config.json` (set `brandId`, `appName`, `bundleId`,
-   colors, Firebase, Maps, API credentials, content, features).
-3. Replace `icon/`, `splash/`, `assets/`, `firebase/`, and `keystore/` with the
-   brand's real files.
-4. Add `<newId>` to the `brand` choice list in `.github/workflows/build.yml`.
-5. `dart run tool/apply_brand.dart <newId>` and build.
+1. Copy an existing brand folder to `brands/<newId>`.
+2. Edit `brands/<newId>/config.json` with client-safe values only: identity,
+   colors/theme, client-safe endpoints, Maps configuration, content and flags.
+3. Leave privileged WooCommerce/wallet/payment/signing secret fields empty in
+   tracked files.
+4. Replace icon, splash, assets, and Firebase brand inputs as required.
+5. Apply the brand from a clean environment and validate with CI/builds.
+6. Provision production signing and backend secrets only through the secure
+   release/backend environment.
