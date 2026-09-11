@@ -1,4 +1,4 @@
-import 'package:aaraa_kart/app/utils/shared_preferences.dart';
+import 'package:aaraa_kart/app/utils/secure_storage.dart';
 import 'package:aaraa_kart/core/constants/const.dart';
 import 'package:aaraa_kart/cubit/auth/auth_state.dart';
 import 'package:aaraa_kart/data/model/customer_address.dart';
@@ -100,7 +100,7 @@ class AuthCubit extends Cubit<AuthState> {
       if (created.id != null) {
         final addresses =
             await _repository.listAddress('${addressData.customerId}');
-        await SharedPrefHelper.saveJsonData(
+        await SecureStorageHelper.saveJsonData(
           AppConstants.addressPrefKey,
           addresses,
         );
@@ -123,7 +123,7 @@ class AuthCubit extends Cubit<AuthState> {
       await _repository.deleteAddress(addrID: addrID, userId: userId);
 
       final addresses = await _repository.listAddress(userId);
-      await SharedPrefHelper.saveJsonData(
+      await SecureStorageHelper.saveJsonData(
         AppConstants.addressPrefKey,
         addresses,
       );
@@ -143,7 +143,7 @@ class AuthCubit extends Cubit<AuthState> {
       await _repository.updateAddress(addrID: addrID, userId: userId);
 
       final addresses = await _repository.listAddress(userId);
-      await SharedPrefHelper.saveJsonData(
+      await SecureStorageHelper.saveJsonData(
         AppConstants.addressPrefKey,
         addresses,
       );
@@ -158,7 +158,7 @@ class AuthCubit extends Cubit<AuthState> {
 
     try {
       final addresses = await _repository.listAddress(userId);
-      await SharedPrefHelper.saveJsonData(
+      await SecureStorageHelper.saveJsonData(
         AppConstants.addressPrefKey,
         addresses,
       );
