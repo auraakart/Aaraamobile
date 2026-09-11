@@ -38,12 +38,17 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
+# Local credentials and signing material
+*.jks
+*.keystore
+key.properties
+**/key.properties
+.env
+.env.*
+!.env.example
+
 # White-label build state — generated per brand by tool/apply_brand.dart.
 # The brand source of truth lives in brands/<id>/ + bricks/native_app/; these
 # are throwaway outputs regenerated fresh on every `apply_brand.dart` run.
-<<<<<<< HEAD
-=======
-
->>>>>>> 1f9ca80 (future delivery api endpoit change)
 /assets/brand/
 /firebase.json
