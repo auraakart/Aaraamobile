@@ -43,7 +43,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  void createCustomer(UserCreateRequest request) async {
+  Future<void> createCustomer(UserCreateRequest request) async {
     emit(CreateCustomerLoading(isLoading: true));
 
     try {
@@ -54,14 +54,14 @@ class AuthCubit extends Cubit<AuthState> {
       } else {
         emit(CreateCustomerError(result.error.toString()));
       }
-      emit(CreateCustomerLoading(isLoading: false));
     } catch (e) {
       emit(CreateCustomerError(e.toString()));
-      emit(CreateCustomerLoading(isLoading: false));
     }
   }
 
-  void fetchCustomer(String customerID) async {
+  Future<void> fetchCustomer(String customerID) async {
+    emit(FetchCustomerLoading(isLoading: true));
+
     try {
       final result = await _repository.fetchCustomer(customerID);
 
@@ -72,11 +72,10 @@ class AuthCubit extends Cubit<AuthState> {
       }
     } catch (e) {
       emit(FetchCustomerError(e.toString()));
-      emit(FetchCustomerLoading(isLoading: false));
     }
   }
 
-  void deleteProfileCustomer(String customerID) async {
+  Future<void> deleteProfileCustomer(String customerID) async {
     emit(DeleteCustomerLoading(isLoading: true));
 
     try {
@@ -85,16 +84,14 @@ class AuthCubit extends Cubit<AuthState> {
       if (result == true) {
         emit(DeleteCustomerSuccess(data: result));
       } else {
-        emit(DeleteCustomerError("Failed"));
+        emit(DeleteCustomerError('Failed to delete profile'));
       }
-      emit(DeleteCustomerLoading(isLoading: false));
     } catch (e) {
       emit(DeleteCustomerError(e.toString()));
-      emit(DeleteCustomerLoading(isLoading: false));
     }
   }
 
-  void addAddress(GetAddressResponse addressData) async {
+  Future<void> addAddress(GetAddressResponse addressData) async {
     emit(CreateAddressLoading(isLoading: true));
 
     try {
@@ -104,19 +101,22 @@ class AuthCubit extends Cubit<AuthState> {
         final addresses =
             await _repository.listAddress('${addressData.customerId}');
         await SharedPrefHelper.saveJsonData(
-            AppConstants.addressPrefKey, addresses);
+          AppConstants.addressPrefKey,
+          addresses,
+        );
         emit(CreateAddressSuccess(data: addresses));
       } else {
-        emit(CreateAddressError("Failed to Create Address"));
+        emit(CreateAddressError('Failed to create address'));
       }
-      emit(CreateAddressLoading(isLoading: false));
     } catch (e) {
       emit(CreateAddressError(e.toString()));
-      emit(CreateAddressLoading(isLoading: false));
     }
   }
 
-  void deleteAddress({required String addrID, required String userId}) async {
+  Future<void> deleteAddress({
+    required String addrID,
+    required String userId,
+  }) async {
     emit(DeleteAddressLoading(isLoading: true));
 
     try {
@@ -124,31 +124,32 @@ class AuthCubit extends Cubit<AuthState> {
 
       final addresses = await _repository.listAddress(userId);
       await SharedPrefHelper.saveJsonData(
-          AppConstants.addressPrefKey, addresses);
+        AppConstants.addressPrefKey,
+        addresses,
+      );
       emit(DeleteAddressSuccess(data: addresses));
-      emit(DeleteAddressLoading(isLoading: false));
     } catch (e) {
       emit(DeleteAddressError(e.toString()));
-      emit(DeleteAddressLoading(isLoading: false));
     }
   }
 
-  void updateAddress({required String addrID, required String userId}) async {
+  Future<void> updateAddress({
+    required String addrID,
+    required String userId,
+  }) async {
     emit(UpdateAddressLoading(isLoading: true));
 
     try {
-      final updated =
-          await _repository.updateAddress(addrID: addrID, userId: userId);
+      await _repository.updateAddress(addrID: addrID, userId: userId);
 
       final addresses = await _repository.listAddress(userId);
       await SharedPrefHelper.saveJsonData(
-          AppConstants.addressPrefKey, addresses);
+        AppConstants.addressPrefKey,
+        addresses,
+      );
       emit(UpdateAddressSuccess(data: addresses));
-
-      emit(UpdateAddressLoading(isLoading: false));
     } catch (e) {
       emit(UpdateAddressError(e.toString()));
-      emit(UpdateAddressLoading(isLoading: false));
     }
   }
 
@@ -158,16 +159,14 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final addresses = await _repository.listAddress(userId);
       await SharedPrefHelper.saveJsonData(
-          AppConstants.addressPrefKey, addresses);
+        AppConstants.addressPrefKey,
+        addresses,
+      );
       emit(ListAddressSuccess(data: addresses));
-      emit(ListAddressLoading(isLoading: false));
     } catch (e) {
       emit(ListAddressError(e.toString()));
-      emit(ListAddressLoading(isLoading: false));
     }
   }
 
   void reset() => emit(AuthInitial());
 }
-
-
