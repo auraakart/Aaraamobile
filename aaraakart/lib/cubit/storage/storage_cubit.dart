@@ -14,6 +14,8 @@ class StorageCubit extends Cubit<StorageState> {
   StorageCubit() : super(StorageState());
 
   Future<void> setUserData(UserDetail? userData) async {
+    emit(state.copyWith(userData: userData));
+
     try {
       if (userData == null) {
         await SecureStorageHelper.removeData(AppConstants.userPrefKey);
@@ -25,7 +27,6 @@ class StorageCubit extends Cubit<StorageState> {
       }
 
       await SharedPrefHelper.removeData(AppConstants.userPrefKey);
-      emit(state.copyWith(userData: userData));
     } catch (_) {
       if (kDebugMode) {
         debugPrint('Unable to persist user identity data securely.');
@@ -35,12 +36,13 @@ class StorageCubit extends Cubit<StorageState> {
   }
 
   Future<void> setIsGuestMode(bool? isGuestMode) async {
+    emit(state.copyWith(isGuestMode: isGuestMode));
+
     try {
       await SharedPrefHelper.saveJsonData(
         AppConstants.guestPrefKey,
         {'guestMode': isGuestMode},
       );
-      emit(state.copyWith(isGuestMode: isGuestMode));
       unawaited(
         PushNotificationService.instance
             .syncAudienceTopics(isGuest: isGuestMode != false),
@@ -57,9 +59,9 @@ class StorageCubit extends Cubit<StorageState> {
   bool? get isGuestMode => state.isGuestMode;
 
   Future<void> removeAddress() async {
+    emit(state.copyWith(addressData: []));
     await SecureStorageHelper.removeData(AppConstants.addressPrefKey);
     await SharedPrefHelper.removeData(AppConstants.addressPrefKey);
-    emit(state.copyWith(addressData: []));
   }
 
   Future<void> getAddress() async {
