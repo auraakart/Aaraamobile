@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:aaraa_kart/app/router/app_router.dart';
 import 'package:aaraa_kart/core/config/brand_config.dart';
@@ -23,7 +25,24 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'app/theme/app_theme.dart';
 
-Future<void> main() async {
+Future<void> main() {
+  if (kReleaseMode) {
+    // Legacy screens still contain print/debugPrint diagnostics. Keep release
+    // builds fail-closed for logging so payment URLs, identifiers, amounts,
+    // callback payloads, and raw exceptions cannot be emitted to production
+    // device logs while the remaining source-level cleanup is completed.
+    return runZoned(
+      _bootstrap,
+      zoneSpecification: ZoneSpecification(
+        print: (self, parent, zone, line) {},
+      ),
+    );
+  }
+
+  return _bootstrap();
+}
+
+Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await BrandConfig.load();
