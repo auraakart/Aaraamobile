@@ -34,8 +34,8 @@
   "keystore": {
     "storeFile": "madrasmilk.jks",
     "keyAlias": "madrasmilk",
-    "storePassword": "madrasmilk",
-    "keyPassword": "madrasmilk"
+    "storePassword": "",
+    "keyPassword": ""
   },
   "maps": {
     "apiKey": "AIzaSyATYMNd-yK1NBd5vdV-j3Bp8MuCfntOftg",
@@ -43,23 +43,24 @@
   },
   "api": {
     "baseUrl": "https://madrasmilk.aaraakart.com/",
-    "wooConsumerKey": "ck_d432b71a291c29992b8007108e0adbed8f18c6a8",
-    "wooConsumerSecret": "cs_3f511dad4a0daa6e02abc8311484edeab8fa42b2",
-    "walletConsumerKey": "6aa9e0b610cd23b63ad75905d83ab426",
-    "walletConsumerSecret": "1eea77b0cbcd9b35c07f1820556804b4"
+    "wooConsumerKey": "",
+    "wooConsumerSecret": "",
+    "walletConsumerKey": "",
+    "walletConsumerSecret": ""
   },
   "payment": {
     "merchantId": "4458325",
     "baseUrl": "https://madrasmilk.aaraakart.com/ccavenue",
     "paytmMid": "KaySid58626786666048",
-    "paytmMerchantKey": "XDxYCucTL6MJI0nE",
+    "paytmMerchantKey": "",
     "paytmWebsite": "DEFAULT",
     "paytmIndustryType": "Retail92",
     "paytmChannelIdWeb": "WEB",
     "paytmChannelIdApp": "WA",
     "paytmIsStaging": false,
     "paytmInitiateTransactionUrl": "https://madrasmilk.aaraakart.com/paytm/initiateTransaction.php",
-    "paytmResponseUrl": "https://madrasmilk.aaraakart.com/paytm/response.php"
+    "paytmResponseUrl": "https://madrasmilk.aaraakart.com/paytm/response.php",
+    "paytmVerifyTransactionUrl": "https://madrasmilk.aaraakart.com/paytm/verifyTransaction.php"
   },
   "images": {
     "logo": "assets/brand/logo.png",
