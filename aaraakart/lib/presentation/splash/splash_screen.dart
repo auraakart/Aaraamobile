@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:aaraa_kart/app/utils/post_login_loader.dart';
+import 'package:aaraa_kart/app/utils/secure_storage.dart';
 import 'package:aaraa_kart/app/utils/shared_preferences.dart';
 import 'package:aaraa_kart/core/constants/const.dart';
 import 'package:aaraa_kart/cubit/auth/auth_cubit.dart';
@@ -44,13 +45,14 @@ class _SplashScreenState extends State<SplashScreen> {
     _loadCatalog();
     await _loadCartItems();
 
-    final userData =
-        await SharedPrefHelper.getJsonData(AppConstants.userPrefKey);
+    final userData = await _loadUserDataWithMigration();
     final guestData =
         await SharedPrefHelper.getJsonData(AppConstants.guestPrefKey);
 
-    if (guestData is Map<String, dynamic> && guestData["guestMode"] == true) {
-      context.read<StorageCubit>().setIsGuestMode(true);
+    if (!mounted) return;
+
+    if (guestData is Map<String, dynamic> && guestData['guestMode'] == true) {
+      await context.read<StorageCubit>().setIsGuestMode(true);
       _navigate('/bottom-bar');
       return;
     }
@@ -59,11 +61,13 @@ class _SplashScreenState extends State<SplashScreen> {
       final userModel = UserDetail.fromJson(userData);
       final customerId = userData['customerID'];
 
-      context.read<StorageCubit>().setUserData(userModel);
-      context.read<StorageCubit>().setIsGuestMode(false);
+      await context.read<StorageCubit>().setUserData(userModel);
+      await context.read<StorageCubit>().setIsGuestMode(false);
+
+      if (!mounted) return;
 
       if (customerId != null && customerId.toString().isNotEmpty) {
-        context.read<AuthCubit>().fetchCustomer(customerId);
+        await context.read<AuthCubit>().fetchCustomer(customerId.toString());
         return;
       }
     }
@@ -71,10 +75,32 @@ class _SplashScreenState extends State<SplashScreen> {
     _navigate('/login');
   }
 
+  Future<Map<String, dynamic>?> _loadUserDataWithMigration() async {
+    final secureData =
+        await SecureStorageHelper.getJsonData(AppConstants.userPrefKey);
+    if (secureData is Map<String, dynamic>) {
+      return secureData;
+    }
+
+    // One-time migration for users upgrading from the legacy plaintext store.
+    final legacyData =
+        await SharedPrefHelper.getJsonData(AppConstants.userPrefKey);
+    if (legacyData is Map<String, dynamic>) {
+      await SecureStorageHelper.saveJsonData(
+        AppConstants.userPrefKey,
+        legacyData,
+      );
+      await SharedPrefHelper.removeData(AppConstants.userPrefKey);
+      return legacyData;
+    }
+
+    return null;
+  }
+
   Future<void> _loadCatalog() {
     return Future.wait([
       context.read<CategoryCubit>().getCategoryList(),
-      context.read<ProductCubit>().getProducts("1", "20", null),
+      context.read<ProductCubit>().getProducts('1', '20', null),
       context.read<BannerCubit>().getMobileBanners(),
     ]);
   }
@@ -120,11 +146,11 @@ class _SplashScreenState extends State<SplashScreen> {
             email: customer?.email ?? storedUser?.email,
           );
 
-          context.read<StorageCubit>().setUserData(userDetail);
-          context.read<StorageCubit>().setIsGuestMode(false);
+          await context.read<StorageCubit>().setUserData(userDetail);
+          await context.read<StorageCubit>().setIsGuestMode(false);
 
           final customerId =
-              customer?.id.toString() ?? storedUser?.customerID ?? "";
+              customer?.id.toString() ?? storedUser?.customerID ?? '';
 
           await loadUserAppData(context, customerId);
 
@@ -132,8 +158,9 @@ class _SplashScreenState extends State<SplashScreen> {
           _navigate('/bottom-bar');
         } else if (state is FetchCustomerError) {
           context.read<CartCubit>().clearCart();
-          context.read<StorageCubit>().removeAddress();
+          await context.read<StorageCubit>().removeAddress();
 
+          if (!mounted) return;
           _navigate('/login');
         }
       },
@@ -149,5 +176,3 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
-
-
