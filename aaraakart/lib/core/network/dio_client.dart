@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:aaraa_kart/core/config/brand_config.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 
 class DioClient {
@@ -14,10 +15,10 @@ class DioClient {
 
   static Dio _createBasicAuthDio(
       String baseUrl, String username, String password) {
-    String basicAuth =
+    final basicAuth =
         'Basic ${base64Encode(utf8.encode('$username:$password'))}';
 
-    Dio dio = Dio(BaseOptions(
+    final dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 20),
       headers: {
@@ -31,7 +32,7 @@ class DioClient {
   }
 
   static Dio _createAuthDio(String baseUrl, String username, String password) {
-    Dio dio = Dio(BaseOptions(
+    final dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 20),
       headers: {
@@ -47,12 +48,12 @@ class DioClient {
 
   static Dio _createWalletAuthDio(String baseUrl) {
     final api = BrandConfig.instance.api;
-    Dio dio = Dio(BaseOptions(
+    final dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 20),
       queryParameters: {
-        "consumer_key": api.walletConsumerKey,
-        "consumer_secret": api.walletConsumerSecret,
+        'consumer_key': api.walletConsumerKey,
+        'consumer_secret': api.walletConsumerSecret,
       },
       headers: {'Content-Type': 'application/text'},
     ));
@@ -62,7 +63,7 @@ class DioClient {
   }
 
   static Dio _createApiKeyDio(String baseUrl, String apiKey) {
-    Dio dio = Dio(BaseOptions(
+    final dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 20),
       headers: {'Content-Type': 'application/json'},
@@ -86,76 +87,70 @@ class DioClient {
   static String _mapDioErrorToMessage(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
-        return "Connection timeout. Please check your internet connection.";
+        return 'Connection timeout. Please check your internet connection.';
       case DioExceptionType.sendTimeout:
-        return "Send timeout. Please try again.";
+        return 'Send timeout. Please try again.';
       case DioExceptionType.receiveTimeout:
-        return "Server took too long to respond.";
+        return 'Server took too long to respond.';
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode ?? 0;
-        final serverMessage = error.response?.data?['message'] ??
-            error.response?.data?['error'] ??
-            'Something went wrong.';
-        return "$serverMessage";
+        if (statusCode == 401 || statusCode == 403) {
+          return 'Your session is not authorized for this request.';
+        }
+        if (statusCode >= 500) {
+          return 'The service is temporarily unavailable. Please try again.';
+        }
+        return 'The request could not be completed. Please check your details and try again.';
       case DioExceptionType.cancel:
-        return "Request was cancelled.";
+        return 'Request was cancelled.';
       case DioExceptionType.unknown:
         if (error.error is SocketException) {
-          return "No Internet connection. Please check your network.";
+          return 'No Internet connection. Please check your network.';
         }
-        return "Unexpected error: ${error.message}";
+        return 'Unexpected network error. Please try again.';
       default:
-        return "Something went wrong. Please try again later.";
+        return 'Something went wrong. Please try again later.';
     }
   }
 
   // ======================
-  // LOGGING INTERCEPTOR
+  // SAFE DEBUG LOGGING
   // ======================
 
   static void _addLogging(Dio dio) {
+    if (!kDebugMode) {
+      return;
+    }
+
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        _logger.d('[REQUEST]');
-        _logger.d('${options.method.toUpperCase()} ${options.uri}');
-        if (options.headers.isNotEmpty) {
-          _logger.d('Headers: ${options.headers}');
-        }
-        if (options.data != null) {
-          _logger.d('Body: ${options.data}');
-        }
+        _logger.d(
+          '[HTTP] ${options.method.toUpperCase()} '
+          '${options.uri.replace(queryParameters: const {})}',
+        );
         return handler.next(options);
       },
       onResponse: (response, handler) {
-        _logger.i('[RESPONSE]');
-        _logger.i(
-            '← ${response.requestOptions.method.toUpperCase()} ${response.requestOptions.uri}');
-        _logger.i('Status: ${response.statusCode}');
-        _logger.i('Data: ${response.data}');
+        _logger.d(
+          '[HTTP] ${response.statusCode} '
+          '${response.requestOptions.method.toUpperCase()} '
+          '${response.requestOptions.uri.replace(queryParameters: const {})}',
+        );
         return handler.next(response);
       },
-      onError: (DioException e, handler) {
-        _logger.e('[ERROR]');
-        _logger.e(
-            '→ ${e.requestOptions.method.toUpperCase()} ${e.requestOptions.uri}');
-        _logger.e('Status Code: ${e.response?.statusCode}');
-        _logger.e('Message: ${e.message}');
-        if (e.response != null) {
-          _logger.e('Response Headers: ${e.response?.headers}');
-          _logger.e('Response Data: ${e.response?.data}');
-        }
-        _logger.e('Request Headers: ${e.requestOptions.headers}');
-        if (e.requestOptions.data != null) {
-          _logger.e('Request Body: ${e.requestOptions.data}');
-        }
-        _logger.e('StackTrace: ${e.stackTrace}');
+      onError: (DioException error, handler) {
+        _logger.w(
+          '[HTTP] ${error.response?.statusCode ?? 'network-error'} '
+          '${error.requestOptions.method.toUpperCase()} '
+          '${error.requestOptions.uri.replace(queryParameters: const {})}',
+        );
 
-        final friendlyMessage = _mapDioErrorToMessage(e);
+        final friendlyMessage = _mapDioErrorToMessage(error);
         return handler.reject(
           DioException(
-            requestOptions: e.requestOptions,
-            response: e.response,
-            type: e.type,
+            requestOptions: error.requestOptions,
+            response: error.response,
+            type: error.type,
             error: friendlyMessage,
           ),
         );
@@ -198,5 +193,3 @@ class DioClient {
     );
   }
 }
-
-
