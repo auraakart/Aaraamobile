@@ -17,6 +17,15 @@ android {
         keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
     }
 
+    def releaseTaskRequested = gradle.startParameter.taskNames.any {
+        it.toLowerCase().contains("release")
+    }
+    if (releaseTaskRequested && !keystorePropertiesFile.exists()) {
+        throw new GradleException(
+            "Release signing configuration is missing. Provide android/key.properties via the secure build environment."
+        )
+    }
+
     defaultConfig {
         applicationId "{{package_name}}"
         minSdkVersion = flutter.minSdkVersion
@@ -37,11 +46,8 @@ android {
     }
 
     signingConfigs {
-        release {
-            // Only wire up release signing when key.properties is present
-            // (e.g. provided in CI). Otherwise the build falls back to the
-            // debug keystore so any brand can still be built unsigned.
-            if (keystorePropertiesFile.exists()) {
+        if (keystorePropertiesFile.exists()) {
+            release {
                 keyAlias keystoreProperties["keyAlias"]
                 keyPassword keystoreProperties["keyPassword"]
                 storeFile file(keystoreProperties["storeFile"])
@@ -52,7 +58,9 @@ android {
 
     buildTypes {
         release {
-            signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             shrinkResources false
         }
@@ -60,6 +68,11 @@ android {
         debug {
             minifyEnabled false
         }
+    }
+
+    lint {
+        checkReleaseBuilds true
+        abortOnError true
     }
 
     buildFeatures {

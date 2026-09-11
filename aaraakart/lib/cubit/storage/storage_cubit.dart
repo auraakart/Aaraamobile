@@ -1,61 +1,93 @@
 import 'dart:async';
 
+import 'package:aaraa_kart/app/utils/secure_storage.dart';
 import 'package:aaraa_kart/app/utils/shared_preferences.dart';
 import 'package:aaraa_kart/core/constants/const.dart';
 import 'package:aaraa_kart/core/notifications/push_notification_service.dart';
 import 'package:aaraa_kart/cubit/storage/storage_state.dart';
 import 'package:aaraa_kart/data/model/customer_address.dart';
 import 'package:aaraa_kart/data/model/user_detail_response.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class StorageCubit extends Cubit<StorageState> {
   StorageCubit() : super(StorageState());
 
-  void setUserData(UserDetail? userData) {
+  Future<void> setUserData(UserDetail? userData) async {
+    emit(state.copyWith(userData: userData));
+
     try {
-      SharedPrefHelper.saveJsonData(
-          AppConstants.userPrefKey, userData?.toJson());
-      emit(state.copyWith(userData: userData));
-    } catch (e) {
-      print('Error saving user data: $e');
+      if (userData == null) {
+        await SecureStorageHelper.removeData(AppConstants.userPrefKey);
+      } else {
+        await SecureStorageHelper.saveJsonData(
+          AppConstants.userPrefKey,
+          userData.toJson(),
+        );
+      }
+
+      await SharedPrefHelper.removeData(AppConstants.userPrefKey);
+    } catch (_) {
+      if (kDebugMode) {
+        debugPrint('Unable to persist user identity data securely.');
+      }
+      rethrow;
     }
   }
 
-  void setIsGuestMode(bool? isGuestMode) {
+  Future<void> setIsGuestMode(bool? isGuestMode) async {
+    emit(state.copyWith(isGuestMode: isGuestMode));
+
     try {
-      SharedPrefHelper.saveJsonData(
-          AppConstants.guestPrefKey, {"guestMode": isGuestMode});
-      emit(state.copyWith(isGuestMode: isGuestMode));
+      await SharedPrefHelper.saveJsonData(
+        AppConstants.guestPrefKey,
+        {'guestMode': isGuestMode},
+      );
       unawaited(
         PushNotificationService.instance
             .syncAudienceTopics(isGuest: isGuestMode != false),
       );
-    } catch (e) {
-      print('Error saving guest mode: $e');
+    } catch (_) {
+      if (kDebugMode) {
+        debugPrint('Unable to persist guest mode.');
+      }
+      rethrow;
     }
   }
 
   UserDetail? get userData => state.userData;
   bool? get isGuestMode => state.isGuestMode;
 
-  void removeAddress() {
-    SharedPrefHelper.removeData(AppConstants.addressPrefKey);
+  Future<void> removeAddress() async {
     emit(state.copyWith(addressData: []));
+    await SecureStorageHelper.removeData(AppConstants.addressPrefKey);
+    await SharedPrefHelper.removeData(AppConstants.addressPrefKey);
   }
 
   Future<void> getAddress() async {
-    final List<dynamic>? addressList =
-        await SharedPrefHelper.getJsonData(AppConstants.addressPrefKey);
+    dynamic stored =
+        await SecureStorageHelper.getJsonData(AppConstants.addressPrefKey);
 
-    if (addressList != null && addressList.isNotEmpty) {
-      final parsedAddresses =
-          addressList.map((item) => GetAddressResponse.fromJson(item)).toList();
+    if (stored is! List) {
+      final legacy =
+          await SharedPrefHelper.getJsonData(AppConstants.addressPrefKey);
+      if (legacy is List) {
+        stored = legacy;
+        await SecureStorageHelper.saveJsonData(
+          AppConstants.addressPrefKey,
+          legacy,
+        );
+        await SharedPrefHelper.removeData(AppConstants.addressPrefKey);
+      }
+    }
 
+    if (stored is List && stored.isNotEmpty) {
+      final parsedAddresses = stored
+          .map((item) => GetAddressResponse.fromJson(item))
+          .toList();
       emit(state.copyWith(addressData: parsedAddresses));
     } else {
       emit(state.copyWith(addressData: []));
     }
   }
 }
-
-

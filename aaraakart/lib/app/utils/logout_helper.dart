@@ -7,15 +7,15 @@ import 'package:aaraa_kart/cubit/wallet/wallet_cubit.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-void performLogout(BuildContext context) {
+Future<void> performLogout(BuildContext context) async {
   context.read<AuthCubit>().reset();
   context.read<SubscriptionsCubit>().reset();
   context.read<WalletCubit>().reset();
   context.read<OrderCubit>().reset();
   context.read<CartCubit>().clearCart();
-  context.read<StorageCubit>().setUserData(null);
-  context.read<StorageCubit>().setIsGuestMode(null);
-  context.read<StorageCubit>().removeAddress();
+
+  final storage = context.read<StorageCubit>();
+  await storage.setUserData(null);
+  await storage.setIsGuestMode(null);
+  await storage.removeAddress();
 }
-
-

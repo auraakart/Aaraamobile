@@ -2,6 +2,8 @@ import 'package:aaraa_kart/data/model/cart_item.dart';
 import 'package:aaraa_kart/data/model/customer_address.dart';
 import 'package:aaraa_kart/data/model/user_detail_response.dart';
 
+const Object _unsetStorageValue = Object();
+
 class StorageState {
   final UserDetail? userData;
   final bool? isGuestMode;
@@ -16,18 +18,20 @@ class StorageState {
   });
 
   StorageState copyWith({
-    UserDetail? userData,
-    bool? isGuestMode,
+    Object? userData = _unsetStorageValue,
+    Object? isGuestMode = _unsetStorageValue,
     List<GetAddressResponse>? addressData,
     List<CartItem>? favItems,
   }) {
     return StorageState(
-      userData: userData ?? this.userData,
-      isGuestMode: isGuestMode ?? this.isGuestMode,
+      userData: identical(userData, _unsetStorageValue)
+          ? this.userData
+          : userData as UserDetail?,
+      isGuestMode: identical(isGuestMode, _unsetStorageValue)
+          ? this.isGuestMode
+          : isGuestMode as bool?,
       addressData: addressData ?? this.addressData,
       favItems: favItems ?? this.favItems,
     );
   }
 }
-
-

@@ -1,0 +1,122 @@
+name: Aaraamobile CI
+
+on:
+  push:
+    branches:
+      - feature-initial
+      - hardening/**
+      - develop
+      - dev
+      - main
+    paths:
+      - 'aaraakart/**'
+      - 'brands/**'
+      - '.github/scripts/**'
+      - '.github/workflows/aaraamobile-ci.yml'
+  pull_request:
+    paths:
+      - 'aaraakart/**'
+      - 'brands/**'
+      - '.github/scripts/**'
+      - '.github/workflows/aaraamobile-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aaraamobile-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter-quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aaraakart
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Reject privileged client-side secrets
+        working-directory: .
+        run: python3 .github/scripts/check_brand_secrets.py
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Verify dependency lockfile is current
+        shell: bash
+        run: |
+          if ! git diff --exit-code -- pubspec.lock; then
+            echo '::error::pubspec.lock is out of date. Run flutter pub get with the supported Flutter toolchain and commit the resolved lockfile.'
+            exit 1
+          fi
+
+      - name: Install Mason CLI
+        shell: bash
+        run: |
+          dart pub global activate mason_cli
+          echo "$PUB_CACHE/bin" >> "$GITHUB_PATH"
+
+      - name: Regenerate Madras Milk build state from source-of-truth template
+        run: dart run tool/apply_brand.dart madrasmilk --no-assets
+
+      - name: Normalize changed Dart files for validation
+        working-directory: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
+          else
+            base="HEAD^"
+          fi
+
+          mapfile -t files < <(
+            git diff --diff-filter=ACMR --name-only "$base...HEAD" -- \
+              'aaraakart/lib/**/*.dart' \
+              'aaraakart/lib/*.dart' \
+              'aaraakart/test/**/*.dart' \
+              'aaraakart/test/*.dart'
+          )
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo 'No changed Dart files to normalize.'
+            exit 0
+          fi
+
+          printf 'Normalizing changed Dart files for validation:\n%s\n' "${files[*]}"
+          dart format --output=none "${files[@]}"
+
+      - name: Static analysis
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Run tests when present
+        shell: bash
+        run: |
+          if [ -d test ] && find test -type f -name '*_test.dart' | grep -q .; then
+            flutter test
+          else
+            echo 'No Flutter tests found yet; test execution skipped.'
+          fi
+
+      - name: Build Android debug APK
+        run: flutter build apk --debug

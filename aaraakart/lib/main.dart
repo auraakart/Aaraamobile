@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:aaraa_kart/app/router/app_router.dart';
-import 'package:aaraa_kart/app/utils/http_overrides.dart';
 import 'package:aaraa_kart/core/config/brand_config.dart';
 import 'package:aaraa_kart/core/di/injection.dart';
 import 'package:aaraa_kart/cubit/auth/auth_cubit.dart';
@@ -16,23 +14,38 @@ import 'package:aaraa_kart/cubit/product/product_cubit.dart';
 import 'package:aaraa_kart/cubit/storage/storage_cubit.dart';
 import 'package:aaraa_kart/cubit/subscriptions/subscriptions_cubit.dart';
 import 'package:aaraa_kart/cubit/wallet/wallet_cubit.dart';
-import 'package:aaraa_kart/core/notifications/in_app_messaging_service.dart';
 import 'package:aaraa_kart/core/notifications/push_notification_service.dart';
 import 'package:aaraa_kart/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'app/theme/app_theme.dart';
 
-Future<void> main() async {
+Future<void> main() {
+  if (kReleaseMode) {
+    // Legacy screens still contain print/debugPrint diagnostics. Keep release
+    // builds fail-closed for logging so payment URLs, identifiers, amounts,
+    // callback payloads, and raw exceptions cannot be emitted to production
+    // device logs while the remaining source-level cleanup is completed.
+    return runZoned(
+      _bootstrap,
+      zoneSpecification: ZoneSpecification(
+        print: (self, parent, zone, line) {},
+      ),
+    );
+  }
+
+  return _bootstrap();
+}
+
+Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await BrandConfig.load();
-
-  HttpOverrides.global = MyHttpOverrides();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -44,19 +57,17 @@ Future<void> main() async {
 
   setupDI();
 
-  CachedNetworkImage.logLevel = CacheManagerLogLevel.debug;
+  if (kDebugMode) {
+    CachedNetworkImage.logLevel = CacheManagerLogLevel.debug;
+  }
 
   await ScreenUtil.ensureScreenSize();
 
-  runApp(MyApp());
+  runApp(const MyApp());
 
-  // unawaited(
-  //   PushNotificationService.instance.initialize().catchError(
-  //     (Object e) {
-  //       debugPrint('FCM: initialization failed: $e');
-  //     },
-  //   ),
-  // );
+  // Keep notification permission user-driven. PushNotificationService.initialize()
+  // requests notification permission, so it must be invoked from the product's
+  // explicit permission/onboarding flow rather than automatically at app launch.
 }
 
 class MyApp extends StatelessWidget {
