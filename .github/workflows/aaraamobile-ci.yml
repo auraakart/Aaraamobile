@@ -74,7 +74,7 @@ jobs:
           fi
 
           mapfile -t files < <(
-            git diff --name-only "$base...HEAD" -- \
+            git diff --diff-filter=ACMR --name-only "$base...HEAD" -- \
               'aaraakart/lib/**/*.dart' \
               'aaraakart/lib/*.dart' \
               'aaraakart/test/**/*.dart' \
