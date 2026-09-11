@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:aaraa_kart/app/router/app_router.dart';
-import 'package:aaraa_kart/app/utils/http_overrides.dart';
 import 'package:aaraa_kart/core/config/brand_config.dart';
 import 'package:aaraa_kart/core/di/injection.dart';
 import 'package:aaraa_kart/cubit/auth/auth_cubit.dart';
@@ -21,6 +19,7 @@ import 'package:aaraa_kart/core/notifications/push_notification_service.dart';
 import 'package:aaraa_kart/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -32,8 +31,6 @@ Future<void> main() async {
 
   await BrandConfig.load();
 
-  HttpOverrides.global = MyHttpOverrides();
-
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -44,19 +41,25 @@ Future<void> main() async {
 
   setupDI();
 
-  CachedNetworkImage.logLevel = CacheManagerLogLevel.debug;
+  CachedNetworkImage.logLevel =
+      kDebugMode ? CacheManagerLogLevel.debug : CacheManagerLogLevel.none;
 
   await ScreenUtil.ensureScreenSize();
 
-  runApp(MyApp());
+  runApp(const MyApp());
 
-  // unawaited(
-  //   PushNotificationService.instance.initialize().catchError(
-  //     (Object e) {
-  //       debugPrint('FCM: initialization failed: $e');
-  //     },
-  //   ),
-  // );
+  // Push notification initialization is intentionally kept separate from
+  // Firebase setup so notification permission UX can be introduced safely.
+  // Enable this only from the appropriate user-facing permission flow.
+  unawaited(
+    PushNotificationService.instance.initialize().catchError(
+      (Object e) {
+        if (kDebugMode) {
+          debugPrint('FCM: initialization failed: $e');
+        }
+      },
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
