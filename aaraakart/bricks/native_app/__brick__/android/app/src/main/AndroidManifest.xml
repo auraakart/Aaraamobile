@@ -1,22 +1,14 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" package="{{package_name}}">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="{{package_name}}">
 
-    <!-- Internet is mandatory for FCM -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Optional permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
-    <!-- This is optional; needed only for push notifications on Android 13+ -->
-    <!-- You said you don't want visible notifications, so this can be removed or left if targeting Android 13+ -->
-    <!-- <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/> -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application android:name="${applicationName}" android:label="{{app_name}}" android:icon="@mipmap/launcher_icon" android:enableOnBackInvokedCallback="false">
 
-        <!-- Firebase Maps API key (if used) -->
         <meta-data android:name="com.google.android.geo.API_KEY" android:value="{{maps_native_key}}"/>
 
-        <!-- Flutter Activity -->
         <activity android:name=".MainActivity" android:launchMode="singleTop" android:theme="@style/LaunchTheme" android:exported="true" android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode" android:hardwareAccelerated="true" android:windowSoftInputMode="adjustResize">
             <meta-data android:name="io.flutter.embedding.android.NormalTheme" android:resource="@style/NormalTheme"/>
             <intent-filter>
@@ -25,36 +17,23 @@
             </intent-filter>
         </activity>
 
-        <!-- Flutter plugin registration -->
         <meta-data android:name="flutterEmbedding" android:value="2"/>
 
-        <!-- Firebase Cloud Messaging service -->
-        <service android:name="com.google.firebase.messaging.FirebaseMessagingService" tools:replace="android:exported" android:exported="true">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-            </intent-filter>
-        </service>
-
-        <!-- Required for FCM to show notifications if used -->
+        <!-- firebase_messaging registers its Android service through the plugin
+             manifest. Do not expose the base FirebaseMessagingService here. -->
         <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="high_importance_channel"/>
 
     </application>
 
-    <!-- Required for text processing in some Flutter plugins -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-        <!-- Required so the checkout webview can hand UPI intents to installed UPI
-             apps (Android 11+ package visibility) -->
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="upi"/>
         </intent>
-        <!-- The app specific UPI links the gateways hand out once the shopper
-             picks an app on the payment page. Without these the intent cannot
-             be resolved even when the app is installed. -->
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="paytmmp"/>
@@ -99,8 +78,6 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="myairtelupi"/>
         </intent>
-        <!-- The UPI apps themselves, so the ones that are installed can be
-             resolved. -->
         <package android:name="net.one97.paytm"/>
         <package android:name="com.google.android.apps.nbu.paisa.user"/>
         <package android:name="com.phonepe.app"/>
