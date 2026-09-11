@@ -60,7 +60,7 @@
     "paytmIsStaging": false,
     "paytmInitiateTransactionUrl": "https://madrasmilk.aaraakart.com/paytm/initiateTransaction.php",
     "paytmResponseUrl": "https://madrasmilk.aaraakart.com/paytm/response.php",
-    "paytmVerifyTransactionUrl": "https://madrasmilk.aaraakart.com/paytm/verifyTransaction.php"
+    "paytmVerifyTransactionUrl": ""
   },
   "images": {
     "logo": "assets/brand/logo.png",
