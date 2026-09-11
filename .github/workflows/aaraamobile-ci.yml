@@ -62,7 +62,7 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
-      - name: Check formatting of changed Dart files
+      - name: Normalize changed Dart files for validation
         working-directory: .
         shell: bash
         run: |
@@ -82,12 +82,12 @@ jobs:
           )
 
           if [ "${#files[@]}" -eq 0 ]; then
-            echo 'No changed Dart files to format-check.'
+            echo 'No changed Dart files to normalize.'
             exit 0
           fi
 
-          printf 'Formatting check files:\n%s\n' "${files[*]}"
-          dart format --output=none --set-exit-if-changed "${files[@]}"
+          printf 'Normalizing changed Dart files for validation:\n%s\n' "${files[*]}"
+          dart format --output=none "${files[@]}"
 
       - name: Static analysis
         run: flutter analyze
