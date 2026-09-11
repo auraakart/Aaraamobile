@@ -33,8 +33,9 @@ void main(List<String> args) {
   final androidBuildNumber = (android['buildNumber'] as num?)?.toInt() ?? 1;
   final iosVersion = str(ios, 'version');
   final iosBuildNumber = (ios['buildNumber'] as num?)?.toInt() ?? 1;
-  if (androidVersion.isEmpty)
+  if (androidVersion.isEmpty) {
     fail('config.json missing required "android.version"');
+  }
   if (iosVersion.isEmpty) fail('config.json missing required "ios.version"');
   final maps = section(config, 'maps');
   final nativeMapsKey = str(maps, 'nativeApiKey');
@@ -112,8 +113,30 @@ void _regenerateNative(
       ],
       workingDir: root);
 
+  _writeAndroidMainActivity(root, packageName);
+
   final podLock = File('$root/ios/Podfile.lock');
   if (podLock.existsSync()) podLock.deleteSync();
+}
+
+void _writeAndroidMainActivity(String root, String packageName) {
+  final kotlinRoot = Directory('$root/android/app/src/main/kotlin');
+  if (kotlinRoot.existsSync()) {
+    kotlinRoot.deleteSync(recursive: true);
+  }
+
+  final packagePath = packageName.replaceAll('.', Platform.pathSeparator);
+  final activity = File(
+      '${kotlinRoot.path}${Platform.pathSeparator}$packagePath${Platform.pathSeparator}MainActivity.kt')
+    ..createSync(recursive: true);
+
+  activity.writeAsStringSync('''
+package $packageName
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()
+''');
 }
 
 void _copyAndroidFirebase(String root, String brandDir) {
