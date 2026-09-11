@@ -16,15 +16,6 @@ class SubscriptionsCubit extends Cubit<SubscriptionState> {
 
     try {
       final result = await _repository.getSubscriptios(customerID);
-
-      // [DEBUG LOG - state/provider update]
-      // ignore: avoid_print
-      print('=== [DEBUG STATE] SubscriptionsCubit emitting SubscriptionSuccess ===');
-      for (final s in result) {
-        // ignore: avoid_print
-        print('State Sub ID: ${s.id}, status: ${s.status}, nextPaymentDateGmt: ${s.nextPaymentDateGmt}');
-      }
-
       emit(SubscriptionSuccess(subscriptions: result));
     } catch (e) {
       emit(SubscriptionError(e.toString()));
@@ -81,7 +72,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionState> {
     }
   }
 
-  void pauseSubscription({
+  Future<void> pauseSubscription({
     required String subscriptionId,
     required String customerId,
     required dynamic pauseDates,
@@ -108,7 +99,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionState> {
     }
   }
 
-  void resumeSubscription({
+  Future<void> resumeSubscription({
     required String subscriptionId,
     required String customerId,
     String? billingPeriod,
@@ -141,5 +132,3 @@ class SubscriptionsCubit extends Cubit<SubscriptionState> {
 
   void reset() => emit(SubscriptionInitial());
 }
-
-
