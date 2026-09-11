@@ -305,7 +305,8 @@ void _generateKeystore(
 
   if (storeFile.isEmpty || storePassword.isEmpty || !src.existsSync()) {
     if (keyProps.existsSync()) keyProps.deleteSync();
-    logStep('No release keystore configured → debug signing fallback');
+    logStep(
+        'No release keystore configured → release builds will fail closed; debug builds remain available');
     return;
   }
 
