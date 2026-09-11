@@ -1,0 +1,92 @@
+{
+  "brandId": "madrasmilk",
+  "appName": "Madras Milk",
+  "bundleId": "com.aaraakart.madrasmilk",
+  "packageName": "ai.pixeltech.madrasmilk",
+  "android": {
+    "version": "7.0.0",
+    "buildNumber": 22
+  },
+  "ios": {
+    "version": "1.0.0",
+    "buildNumber": 2
+  },
+  "theme": {
+    "primaryColor": "#111111",
+    "primaryDarkColor": "#000000",
+    "secondaryColor": "#5E5E5E",
+    "whiteColor": "#FFFFFF",
+    "backgroundBaseColor": "#F8F9FA",
+    "backgroundSurfaceColor": "#FFFFFF",
+    "backgroundElevatedColor": "#F6F7F9",
+    "textPrimaryColor": "#1A1A1A",
+    "textSecondaryColor": "#5E5E5E",
+    "textTertiaryColor": "#8A8A8A",
+    "textDisabledColor": "#B5B5B5",
+    "errorColor": "#E74C3C",
+    "borderDefaultColor": "#E5E7EB",
+    "borderDisabledColor": "#EEEEEE",
+    "shimmerBaseLightColor": "#F0F0F0",
+    "shimmerBaseDarkColor": "#E0E0E0",
+    "shimmerDragLightColor": "#FAFAFA",
+    "shimmerDragDarkColor": "#F5F5F5"
+  },
+  "keystore": {
+    "storeFile": "madrasmilk.jks",
+    "keyAlias": "madrasmilk",
+    "storePassword": "madrasmilk",
+    "keyPassword": "madrasmilk"
+  },
+  "maps": {
+    "apiKey": "AIzaSyATYMNd-yK1NBd5vdV-j3Bp8MuCfntOftg",
+    "nativeApiKey": "AIzaSyCEzI6QK-z9pT3aZoEACeRouLVqcV4NM8c"
+  },
+  "api": {
+    "baseUrl": "https://madrasmilk.aaraakart.com/",
+    "wooConsumerKey": "ck_d432b71a291c29992b8007108e0adbed8f18c6a8",
+    "wooConsumerSecret": "cs_3f511dad4a0daa6e02abc8311484edeab8fa42b2",
+    "walletConsumerKey": "6aa9e0b610cd23b63ad75905d83ab426",
+    "walletConsumerSecret": "1eea77b0cbcd9b35c07f1820556804b4"
+  },
+  "payment": {
+    "merchantId": "4458325",
+    "baseUrl": "https://madrasmilk.aaraakart.com/ccavenue",
+    "paytmMid": "KaySid58626786666048",
+    "paytmMerchantKey": "XDxYCucTL6MJI0nE",
+    "paytmWebsite": "DEFAULT",
+    "paytmIndustryType": "Retail92",
+    "paytmChannelIdWeb": "WEB",
+    "paytmChannelIdApp": "WA",
+    "paytmIsStaging": false,
+    "paytmInitiateTransactionUrl": "https://madrasmilk.aaraakart.com/paytm/initiateTransaction.php",
+    "paytmResponseUrl": "https://madrasmilk.aaraakart.com/paytm/response.php"
+  },
+  "images": {
+    "logo": "assets/brand/logo.png",
+    "splash": "assets/brand/splash.png",
+    "icon": "assets/brand/icon.png",
+    "banner": "assets/brand/banner.jpg",
+    "successLottie": "assets/brand/success.json",
+    "defaultProduct": ""
+  },
+  "content": {
+    "welcomeTitle": "Welcome to Madras Milk",
+    "welcomeDescription": "Apart from the lovely green pastures they graze on, they are fed farm-grown organic sugarcane, millets for energy, oil cakes for protein, hay for a cooling effect, and bran for good digestion. 95% of the feed is grown organically in the farm itself. The rest 5% is obtained from outside.",
+    "phoneCountryCode": "+91",
+    "termsAndConditionsUrl": "https://madrasmilk.aaraakart.com/terms-and-conditions/",
+    "privacyPolicyUrl": "https://madrasmilk.aaraakart.com/privacy-policy/",
+    "faqUrl": "https://madrasmilk.aaraakart.com/faqs/",
+    "whatsappNumber": "9362333777",
+    "supportMail": "info@madrasmilk.com",
+    "tagline": "",
+    "officeAddress": ""
+  },
+  "notifications": {
+    "channelName": "Madras Milk",
+    "channelDescription": "Order updates, delivery reminders and offers from Madras Milk",
+    "topics": ["all-madrasmilk"],
+    "inAppMessaging": true,
+    "guestTopic": "guests-madrasmilk",
+    "userTopic": "users-madrasmilk"
+  }
+}

@@ -1,0 +1,32 @@
+name: native_app
+description: >
+  The android/ and ios/ native project skeleton for this app, brand-neutral
+  except for the identity fields below. Regenerated fresh by
+  tool/apply_brand.dart on every brand apply — do not edit android/ or ios/
+  directly; edit the files under __brick__/ instead.
+version: 1.0.0
+environment:
+  mason: ">=0.1.0 <0.2.0"
+
+vars:
+  app_name:
+    type: string
+    description: Display name shown under the launcher icon (Android label / iOS CFBundleDisplayName).
+  bundle_id:
+    type: string
+    description: iOS PRODUCT_BUNDLE_IDENTIFIER. Distinct from package_name below — the two are separate identifiers and may differ per brand (each with its own Firebase app registration).
+  package_name:
+    type: string
+    description: Android applicationId/namespace (and AndroidManifest package, MainActivity.kt package). Distinct from bundle_id above — must match the package_name registered in this brand's google-services.json.
+  version:
+    type: string
+    description: Marketing version (iOS MARKETING_VERSION). Android's version comes from pubspec.yaml.
+    default: "1.0.0"
+  build_number:
+    type: string
+    description: Build number (iOS CURRENT_PROJECT_VERSION). Android's build number comes from pubspec.yaml.
+    default: "1"
+  maps_native_key:
+    type: string
+    description: Native Google Maps API key (Android manifest meta-data, iOS GMSServices.provideAPIKey). Empty is valid if Maps isn't used.
+    default: ""
