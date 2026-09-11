@@ -6,6 +6,7 @@ import 'package:aaraa_kart/core/notifications/notification_navigator.dart';
 import 'package:aaraa_kart/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -53,7 +54,7 @@ class PushNotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen(_onNotificationTap);
     _messaging.onTokenRefresh.listen(_publishToken);
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      debugPrint('FCM: notifications denied; skipping token and topics.');
+      _debugLog('Notifications denied; skipping token and topics.');
       return;
     }
 
@@ -92,7 +93,7 @@ class PushNotificationService {
       await _messaging.unsubscribeFromTopic(leave);
       _appliedIsGuest = isGuest;
     } catch (e) {
-      debugPrint('FCM: audience topic sync failed ($join/$leave): $e');
+      _debugLog('Audience topic sync failed.');
     }
   }
 
@@ -102,22 +103,20 @@ class PushNotificationService {
         String? apnsToken;
         for (var attempt = 0; attempt < 10 && apnsToken == null; attempt++) {
           apnsToken = await _messaging.getAPNSToken();
-          debugPrint('FCM: APNS token attempt $attempt: $apnsToken');
           if (apnsToken == null) {
             await Future.delayed(const Duration(milliseconds: 500));
           }
         }
         if (apnsToken == null) {
-          debugPrint('FCM: APNS token unavailable; skipping token fetch.');
+          _debugLog('APNS token unavailable; skipping FCM token fetch.');
           return;
         }
       }
 
       final token = await _messaging.getToken();
-      debugPrint('FCM: resolved token: $token');
       if (token != null) await _publishToken(token);
     } catch (e) {
-      debugPrint('FCM: token resolution failed: $e');
+      _debugLog('Token resolution failed.');
     }
   }
 
@@ -127,7 +126,7 @@ class PushNotificationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_tokenPrefKey, token);
     } catch (e) {
-      debugPrint('FCM: could not persist token: $e');
+      _debugLog('Could not persist notification token.');
     }
     onToken?.call(token);
   }
@@ -137,16 +136,13 @@ class PushNotificationService {
       try {
         await _messaging.subscribeToTopic(topic);
       } catch (e) {
-        debugPrint('FCM: failed to subscribe to "$topic": $e');
+        _debugLog('Failed to subscribe to a configured notification topic.');
       }
     }
   }
 
   void _onForegroundMessage(RemoteMessage message) {
-    debugPrint(
-      'FCM: foreground message ${message.messageId} '
-      'notification=${message.notification != null} data=${message.data}',
-    );
+    _debugLog('Foreground notification received.');
 
     if (Platform.isIOS && message.notification != null) return;
     LocalNotificationService.instance.showFromMessage(message);
@@ -163,6 +159,10 @@ class PushNotificationService {
     NotificationNavigator.handle(message.data);
     NotificationNavigator.flushPending();
   }
+
+  void _debugLog(String message) {
+    if (kDebugMode) {
+      debugPrint('FCM: $message');
+    }
+  }
 }
-
-
